@@ -1,7 +1,14 @@
 import streamlit as st
 import base64
 from pathlib import Path
-from nav import render_top_nav
+
+# Eğer kendi yazdığın nav.py dosyan varsa hata vermemesi için
+try:
+    from nav import render_top_nav
+except ImportError:
+    # Eğer nav.py yoksa geçici boş bir fonksiyon
+    def render_top_nav(page):
+        pass
 
 st.set_page_config(
     page_title="TUA Uzay İstasyonu | Ana Sayfa",
@@ -9,8 +16,12 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# Arka plan resmi için güvenli yükleme
 bg_image_path = Path(__file__).parent / "assets" / "darker-earth-x.jpg"
-bg_image_b64 = base64.b64encode(bg_image_path.read_bytes()).decode("utf-8")
+if bg_image_path.exists():
+    bg_image_b64 = base64.b64encode(bg_image_path.read_bytes()).decode("utf-8")
+else:
+    bg_image_b64 = ""
 
 # --- FÜTÜRİSTİK CSS ---
 home_css = """
@@ -90,7 +101,7 @@ html, body, [data-testid="stAppViewContainer"] {
     border-left: 4px solid var(--cyan);
     border-radius: 8px;
     padding: 25px;
-    height: 220px;
+    height: 240px; /* Açıklamalar sığsın diye biraz uzatıldı */
     transition: all 0.3s ease-in-out;
     cursor: pointer;
 }
@@ -102,8 +113,17 @@ html, body, [data-testid="stAppViewContainer"] {
 }
 
 .module-icon {
-    font-size: 2.5rem;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #ffb300; /* Amber rengi envanter kodu */
+    background: rgba(255, 179, 0, 0.1);
+    border: 1px solid rgba(255, 179, 0, 0.4);
+    padding: 4px 12px;
+    border-radius: 4px;
+    display: inline-block;
     margin-bottom: 15px;
+    letter-spacing: 2px;
 }
 
 .module-title {
@@ -127,14 +147,6 @@ html, body, [data-testid="stAppViewContainer"] {
     justify-content: center;
     margin-top: 50px;
 }
-[data-testid="stButton"] > button:disabled {
-    background: #0a0f14 !important;
-    color: #6d7c88 !important;
-    border: 1px solid #1b2731 !important;
-    box-shadow: none !important;
-    cursor: not-allowed !important;
-    opacity: 1 !important;
-}
 </style>
 """
 st.markdown(home_css.replace("__BG_IMAGE__", bg_image_b64), unsafe_allow_html=True)
@@ -143,8 +155,8 @@ render_top_nav("home")
 st.markdown("<br>", unsafe_allow_html=True)
 
 # --- HERO BÖLÜMÜ ---
-st.markdown('<div class="hero-title">LEO-DOCK-3 UZAY İSTASYONU</div>', unsafe_allow_html=True)
-st.markdown('<div class="hero-sub">TUA HACKATHON // OTONOM BERTHING & SAVUNMA MİMARİSİ</div>', unsafe_allow_html=True)
+st.markdown('<div class="hero-title">TAM OTONOM UZAY İSTASYONU</div>', unsafe_allow_html=True)
+st.markdown('<div class="hero-sub">TUA HACKATHON // NODE BASE LEO MİMARİSİ</div>', unsafe_allow_html=True)
 st.markdown("""
 <div class="station-stage">
     <div class="station-stage-title">İstasyon Model Alanı</div>
@@ -154,44 +166,44 @@ st.markdown("""
 
 st.markdown("---")
 
-# --- İSTASYON MODÜLLERİ (Hover Efektli Kartlar) ---
-st.markdown("<h3 style='text-align: center; color: #4a7a96; font-family: \"Share Tech Mono\";'>İSTASYON BİLEŞENLERİ VE SİSTEM MİMARİSİ</h3><br>", unsafe_allow_html=True)
+# --- İSTASYON MODÜLLERİ (HOVER EFEKTLİ KARTLAR - BLUEPRINT'E GÖRE GÜNCELLENDİ) ---
+st.markdown("<h3 style='text-align: center; color: #4a7a96; font-family: \"Share Tech Mono\";'>İSTASYON MODÜL YAPISI VE İŞLEVSEL KESİTLER</h3><br>", unsafe_allow_html=True)
 
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
     st.markdown("""
     <div class="module-card">
-        <div class="module-icon">R-01</div>
-        <div class="module-title">1. Robotik Kol</div>
-        <div class="module-desc">6 eksenli otonom hareket kabiliyeti. Görüntü işleme verileriyle hedef modülü yakalar ve pürüzsüz yanaştırma sağlar.</div>
+        <div class="module-icon">NODE-01</div>
+        <div class="module-title">1. Node Modülü</div>
+        <div class="module-desc">İstasyonun ana bağlantı ve modüller arası transfer noktası. Çoklu kenetlenme bağlantı noktaları sağlar.</div>
     </div>
     """, unsafe_allow_html=True)
 
 with col2:
     st.markdown("""
     <div class="module-card">
-        <div class="module-icon">D-02</div>
-        <div class="module-title">2. Docking Port</div>
-        <div class="module-desc">Kupa-Koni (Probe & Drogue) kilit mekanizması. HCS motorlu vidalar ile %100 basınç sızdırmazlığı sağlayan kenetlenme limanı.</div>
+        <div class="module-icon">LIFE-02</div>
+        <div class="module-title">2. Life Modülü</div>
+        <div class="module-desc">Mürettebatın yaşam alanı. Oksijen, su ve sıcaklık kontrolü gibi hayati yaşam destek sistemlerini içerir.</div>
     </div>
     """, unsafe_allow_html=True)
 
 with col3:
     st.markdown("""
     <div class="module-card">
-        <div class="module-icon">CV-03</div>
-        <div class="module-title">3. Optik / CV Radar</div>
-        <div class="module-desc">OpenCV destekli tarama sistemi. Liman yüzeyindeki Uzay Çöplerini (FOD) tespit ederek güvenlik iptali (Abort) verebilir.</div>
+        <div class="module-icon">CORE-03</div>
+        <div class="module-title">3. Core Modülü</div>
+        <div class="module-desc">İstasyonun merkezi komuta ve enerji yönetim ünitesi. Seyrüsefer, iletişim ve güç dağıtımını kontrol eder.</div>
     </div>
     """, unsafe_allow_html=True)
 
 with col4:
     st.markdown("""
     <div class="module-card">
-        <div class="module-icon">DEF-04</div>
-        <div class="module-title">4. Lazer Savunma</div>
-        <div class="module-desc">İstasyona yaklaşan tanımlanmamış meteor veya tehlikeli kütleleri tespit edip yönlendirilmiş enerji ile imha eden taret sistemi.</div>
+        <div class="module-icon">RES-04</div>
+        <div class="module-title">4. Research Modülü</div>
+        <div class="module-desc">Bilimsel çalışmalar ve deneyler için mikroçekim laboratuvarı. Uzay gözlemleri ve malzeme araştırmaları yürütür.</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -201,4 +213,4 @@ st.info("**Test Ortamı Hazır:** Sistemin otonom çalışma ve karar verme sür
 
 # Sayfanın alt kısımlarına ekip veya vizyon yazısı eklenebilir
 st.markdown("---")
-st.markdown("<p style='text-align:center; font-family: \"Share Tech Mono\"; color: #4a7a96;'>© 2026 TUA Hackathon Takımı</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center; font-family: \"Share Tech Mono\"; color: #4a7a96;'>GALLIPOLI</p>", unsafe_allow_html=True)

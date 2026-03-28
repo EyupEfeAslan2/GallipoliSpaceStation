@@ -2,7 +2,7 @@ import streamlit as st
 from nav import render_top_nav
 
 st.set_page_config(
-    page_title="TUA Uzay İstasyonu | Hakkımızda",
+    page_title="GALLIPOLI TUA HACKATHON | Hakkımızda",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -66,8 +66,7 @@ st.markdown("""
 <div class="info-card">
   <h3>Proje Vizyonu</h3>
   <p>
-    LEO-DOCK-3 uzay istasyonu için geliştirilen bu çözüm, robotik kol tabanlı otonom kenetlenme,
-    optik FOD tespiti ve güvenlik odaklı karar verme süreçlerini tek bir görev kontrol akışında birleştirir.
+    Tam Otonom Uzay İstasyonu için geliştirilen bu çözüm, robotik kol tabanlı otonom hizalama ve kenetlenme işlemlerini, optik FOD tespiti ve güvenlik odaklı karar verme süreçlerini tek bir görev kontrol akışında birleştirir.
   </p>
 </div>
 """, unsafe_allow_html=True)
@@ -85,4 +84,4 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown("---")
-st.markdown("<p style='text-align:center;' class='mono'>© 2026 TUA Hackathon Takımı</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center;' class='mono'>GALLIPOLI</p>", unsafe_allow_html=True)
