@@ -1,0 +1,39 @@
+# === Unity ===
+# Unity project is under GallipoliSpaceStation/, so ignore generated dirs there.
+GallipoliSpaceStation/[Ll]ibrary/
+GallipoliSpaceStation/[Tt]emp/
+GallipoliSpaceStation/[Oo]bj/
+GallipoliSpaceStation/[Bb]uild/
+GallipoliSpaceStation/[Bb]uilds/
+GallipoliSpaceStation/[Ll]ogs/
+GallipoliSpaceStation/[Uu]ser[Ss]ettings/
+GallipoliSpaceStation/[Mm]emoryCaptures/
+GallipoliSpaceStation/[Pp]ackages/[Pp]ackage[Cc]ache/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.apk
+*.exe
+crashlytics-build.properties
+
+# Local tool metadata
+.codex
+
+# === Python / Streamlit ===
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.env
+# Unity'den görüntü işleme için gelecek anlık test fotoğraflarını repoya şişirmemek için:
+Berthing_Dashboard/Unity_Captures/ 
