@@ -83,5 +83,70 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+st.markdown('<h3 style="margin-top:8px;">Takım</h3>', unsafe_allow_html=True)
+
+team_members = [
+    {
+        "name": "Arda Kıvanç ÖZDEMİR",
+        "role": "Takım Lideri",
+        "education": "Başkent Üniversitesi · Makine Mühendisliği · 3. sınıf (Onur Öğrencisi)",
+        "bio": (
+            "TEKNOFEST 2024 Tarımsal İKA yarışmasında mekanik tasarım yetkinliğiyle Türkiye 8.liği "
+            "başarısı elde etmiş, TEKNOFEST 2025 Uluslararası İHA projelerinde yapısal tasarım ve "
+            "analiz çalışmalarında yer almıştır. Takımda hibrit motorun matematiksel modellenmesi, "
+            "besleme sistemi tasarımı ve statik ateşleme düzeneğinin geliştirilmesi süreçlerini yönetmektedir."
+        ),
+    },
+    {
+        "name": "Şaban Efe ŞAHİN",
+        "role": "Üretim ve Montaj Lideri",
+        "education": "Gazi Üniversitesi · Uçak Teknolojisi · 2. sınıf",
+        "bio": (
+            "Savunma sanayi odaklı İHA projelerinde üretim ve montaj tecrübesine sahiptir. "
+            "TEKNOFEST 2025 Uluslararası İHA Yarışması'nda pilotu olduğu takımı ile finallerde yarışmıştır. "
+            "Takımda 3D tasarım, imalat koordinasyonu, tedarik süreçleri ve motorun fiziksel montaj "
+            "aşamalarına liderlik etmektedir."
+        ),
+    },
+    {
+        "name": "Enes OZAN",
+        "role": "Mekanik Tasarım ve İmalat",
+        "education": "Başkent Üniversitesi · Makine Mühendisliği · 3. sınıf",
+        "bio": (
+            "Lise eğitiminde edindiği uçak gövde-motor altyapısını, üniversite sürecindeki talaşlı "
+            "imalat ve CNC staj deneyimleriyle birleştirerek takımda malzeme seçimi, mekanik tasarım "
+            "ve montaj planlama süreçlerine teknik katkı sunmaktadır."
+        ),
+    },
+    {
+        "name": "Eyüp Efe ASLAN",
+        "role": "Yazılım ve Veri Süreçleri",
+        "education": "Ankara Üniversitesi · Yazılım Mühendisliği · 2. sınıf",
+        "bio": (
+            "VoIP mimarileri, AI tabanlı sosyal medya güvenliği ve radyo frekansı teknolojileri "
+            "üzerine staj ve çalışma deneyimine sahiptir. Full stack web teknolojileri alanında "
+            "projeler yürütmektedir. Takımda HRAP verilerine göre roket boyutlandırma ve motor test "
+            "verilerinin kontrolü süreçlerini yürütmektedir."
+        ),
+    },
+]
+
+for i in range(0, len(team_members), 2):
+    c1, c2 = st.columns(2, gap="large")
+    pair = team_members[i:i + 2]
+    for col, member in zip([c1, c2], pair):
+        with col:
+            st.markdown(
+                f"""
+                <div class="info-card">
+                  <h3>{member["name"]}</h3>
+                  <p class="mono">{member["role"]}</p>
+                  <p><b>{member["education"]}</b></p>
+                  <p>{member["bio"]}</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
 st.markdown("---")
 st.markdown("<p style='text-align:center;' class='mono'>GALLIPOLI</p>", unsafe_allow_html=True)

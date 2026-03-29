@@ -7,6 +7,7 @@ import math
 import io
 import csv
 import json
+from pathlib import Path
 from nav import render_top_nav
 
 # ═══════════════════════════════════════════════════════════
@@ -17,6 +18,10 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
+
+ASSETS_DIR = Path(__file__).resolve().parents[1] / "assets"
+NON_FOD_IMAGE = ASSETS_DIR / "NonFOD.jpeg"
+FOD_IMAGE = ASSETS_DIR / "FOD.jpeg"
 
 # ═══════════════════════════════════════════════════════════
 #  GLOBAL CSS - Futuristik / Karanlik Tema
@@ -392,6 +397,26 @@ def generate_mock_image(has_fod: bool) -> np.ndarray:
     return img
 
 
+def load_asset_image(image_path: Path):
+    """Asset klasorunden OpenCV BGR goruntu yukler (unicode dosya adlariyla uyumlu)."""
+    if not image_path.exists():
+        return None
+    data = np.fromfile(str(image_path), dtype=np.uint8)
+    if data.size == 0:
+        return None
+    return cv2.imdecode(data, cv2.IMREAD_COLOR)
+
+
+def get_scenario_scan_image(has_fod: bool):
+    """Senaryoya gore NonFOD/FOD goruntusunu dondurur, yoksa mock fallback verir."""
+    selected = FOD_IMAGE if has_fod else NON_FOD_IMAGE
+    loaded = load_asset_image(selected)
+    if loaded is None:
+        return generate_mock_image(has_fod=has_fod), selected, False
+    resized = cv2.resize(loaded, (640, 480), interpolation=cv2.INTER_AREA)
+    return resized, selected, True
+
+
 def detect_and_annotate(image: np.ndarray):
     """Parlak yabancı nesneleri tespit eder ve görüntüyü anotasyonlar."""
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -419,25 +444,16 @@ def detect_and_annotate(image: np.ndarray):
         annotated = cv2.addWeighted(annotated, 0.85, overlay, 0.15, 0)
 
         for idx, (x, y, w, h, area) in enumerate(fod_list):
-            # Köşe L-parantezleri (NASA tarzı)
-            length = 18
-            thickness = 2
-            color = (0, 0, 255)
-            # Sol-üst
-            cv2.line(annotated, (x - 6, y - 6), (x - 6 + length, y - 6), color, thickness)
-            cv2.line(annotated, (x - 6, y - 6), (x - 6, y - 6 + length), color, thickness)
-            # Sağ-üst
-            cv2.line(annotated, (x + w + 6, y - 6), (x + w + 6 - length, y - 6), color, thickness)
-            cv2.line(annotated, (x + w + 6, y - 6), (x + w + 6, y - 6 + length), color, thickness)
-            # Sol-alt
-            cv2.line(annotated, (x - 6, y + h + 6), (x - 6 + length, y + h + 6), color, thickness)
-            cv2.line(annotated, (x - 6, y + h + 6), (x - 6, y + h + 6 - length), color, thickness)
-            # Sağ-alt
-            cv2.line(annotated, (x + w + 6, y + h + 6), (x + w + 6 - length, y + h + 6), color, thickness)
-            cv2.line(annotated, (x + w + 6, y + h + 6), (x + w + 6, y + h + 6 - length), color, thickness)
+            # Yabanci cismi kirmizi kutu ile cembere al
+            pad = 6
+            x1 = max(x - pad, 0)
+            y1 = max(y - pad, 0)
+            x2 = min(x + w + pad, 639)
+            y2 = min(y + h + pad, 479)
+            cv2.rectangle(annotated, (x1, y1), (x2, y2), (0, 0, 255), 2)
 
             label = f"FOD-{idx+1:02d}  ALAN:{int(area)}px2"
-            cv2.putText(annotated, label, (x - 6, y - 14),
+            cv2.putText(annotated, label, (x1, max(y1 - 8, 12)),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 80, 255), 1, cv2.LINE_AA)
 
         # Üst banner
@@ -721,6 +737,7 @@ with sc_col:
         ["Temiz Yüzey (Başarılı Kenetlenme)", "FOD / Uzay Çöpü Var (Güvenlik İptali)"],
         horizontal=True
     )
+    st.caption("CV test girdileri: `assets/NonFOD.jpeg` ve `assets/FOD.jpeg`")
 with btn_col:
     start = st.button("OTONOM SEKANSI BAŞLAT", type="primary", use_container_width=True)
 
@@ -836,7 +853,7 @@ if start:
         st.success("GO: Berthing sekansı başlatıldı.")
     else:
         st.error("NO-GO: FOD senaryosu aktif. Güvenlik protokolü devrede.")
-    st.info("Görev anlatım videoları ve teorik kullanım özeti için `Teori & Medya` sekmesini açabilirsiniz.")
+    st.info("Görev anlatımı ve mekanizma detayları için `Otonom Mekanizma` sekmesini açabilirsiniz.")
     st.markdown("---")
 
     # ── UDP Komutu Gönder ──────────────────────────────────
@@ -892,15 +909,20 @@ if start:
         progress_label_ph.markdown(f'<span class="faz-value">%{i} - FAZ 2: FOD Tarama</span>', unsafe_allow_html=True)
         time.sleep(0.05)
 
-    # Görüntü üret ve işle
+    # Senaryo görüntüsünü yükle ve işle
     has_debris = (test_scenario == "FOD / Uzay Çöpü Var (Güvenlik İptali)")
-    raw_image = generate_mock_image(has_fod=has_debris)
+    raw_image, source_image_path, loaded_from_assets = get_scenario_scan_image(has_fod=has_debris)
     processed_image, fod_found = detect_and_annotate(raw_image)
-    fod_found = has_debris
     kpi_state["fod_detection_latency_s"] = time.time() - phase2_start_ts
+
+    if loaded_from_assets:
+        append_log("INFO", f"CV girdisi asset dosyasindan yuklendi: {source_image_path.name}")
+    else:
+        append_log("WARN", f"{source_image_path.name} bulunamadi. Mock goruntu ile devam edildi.")
+
     camera_ph.image(cv2.cvtColor(processed_image, cv2.COLOR_BGR2RGB),
                     use_container_width=True,
-                    caption="ARM-CAM-01 - Anlik CV Tarama Sonucu")
+                    caption=f"ARM-CAM-01 - Anlik CV Tarama Sonucu ({source_image_path.name})")
     append_event("CV", "INFO", "FOD Scan Complete", f"debris_found={fod_found}")
 
     # ── FOD TESPİT EDİLDİ ────────────────────────────────

@@ -78,8 +78,8 @@ def render_top_nav(active_page: str):
             _safe_switch("pages/1_Simulasyon.py")
 
     with col4:
-        if st.button("Teori & Medya", use_container_width=True, disabled=(active_page == "theory")):
-            _safe_switch("pages/3_Teori_ve_Medya.py")
+        if st.button("Otonom Mekanizma", use_container_width=True, disabled=(active_page == "theory")):
+            _safe_switch("pages/3_Otonom_Mekanizma.py")
 
     st.markdown(
         """
