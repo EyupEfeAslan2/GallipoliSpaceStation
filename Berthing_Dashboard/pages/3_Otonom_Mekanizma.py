@@ -1,6 +1,7 @@
 import streamlit as st
 from pathlib import Path
-from PIL import Image, ImageOps
+import cv2
+import numpy as np
 from nav import render_top_nav, render_simulation_subnav
 
 st.set_page_config(
@@ -149,15 +150,27 @@ def load_video_bytes(video_path: str):
 def load_uniform_image(image_path: Path):
     if not image_path.exists():
         return False
-    with Image.open(image_path) as raw:
-        rgb = raw.convert("RGB")
-        # İki görseli de kırpmadan aynı sunum oranına oturt.
-        fitted = ImageOps.contain(rgb, (1600, 900), method=Image.Resampling.LANCZOS)
-        canvas = Image.new("RGB", (1600, 900), (6, 15, 25))
-        px = (canvas.width - fitted.width) // 2
-        py = (canvas.height - fitted.height) // 2
-        canvas.paste(fitted, (px, py))
-        return canvas
+    data = np.fromfile(str(image_path), dtype=np.uint8)
+    if data.size == 0:
+        return False
+    bgr = cv2.imdecode(data, cv2.IMREAD_COLOR)
+    if bgr is None:
+        return False
+
+    rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
+    src_h, src_w = rgb.shape[:2]
+    target_w, target_h = 1600, 900
+
+    scale = min(target_w / src_w, target_h / src_h)
+    new_w = max(1, int(src_w * scale))
+    new_h = max(1, int(src_h * scale))
+    resized = cv2.resize(rgb, (new_w, new_h), interpolation=cv2.INTER_AREA)
+
+    canvas = np.full((target_h, target_w, 3), (6, 15, 25), dtype=np.uint8)
+    x0 = (target_w - new_w) // 2
+    y0 = (target_h - new_h) // 2
+    canvas[y0:y0 + new_h, x0:x0 + new_w] = resized
+    return canvas
 
 
 render_top_nav("simulation")
