@@ -149,13 +149,13 @@ def load_video_bytes(video_path: str):
 
 def load_uniform_image(image_path: Path):
     if not image_path.exists():
-        return False
+        return None
     data = np.fromfile(str(image_path), dtype=np.uint8)
     if data.size == 0:
-        return False
+        return None
     bgr = cv2.imdecode(data, cv2.IMREAD_COLOR)
     if bgr is None:
-        return False
+        return None
 
     rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
     src_h, src_w = rgb.shape[:2]
@@ -239,7 +239,7 @@ for col, (label, image_path) in zip(slot_cols, ROBOT_ARM_IMAGES):
     with col:
         st.markdown(f'<div class="video-title">{label}</div>', unsafe_allow_html=True)
         img = load_uniform_image(image_path)
-        if img:
+        if img is not None:
             st.image(img, use_container_width=True)
         else:
             st.markdown(
