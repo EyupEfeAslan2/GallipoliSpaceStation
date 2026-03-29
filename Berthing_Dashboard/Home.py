@@ -1,5 +1,7 @@
 import streamlit as st
 import base64
+import streamlit.components.v1 as components
+
 from pathlib import Path
 
 # Eğer kendi yazdığın nav.py dosyan varsa hata vermemesi için
@@ -64,20 +66,7 @@ html, body, [data-testid="stAppViewContainer"] {
     color: #4a7a96;
     text-align: center;
     letter-spacing: 3px;
-    margin-bottom: 40px;
-}
-
-.station-stage {
-    min-height: 320px;
-    border: 1px dashed rgba(0, 229, 255, 0.35);
-    border-radius: 12px;
-    background: rgba(6, 18, 30, 0.42);
-    backdrop-filter: blur(2px);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    margin: 20px 0 28px 0;
+    margin-bottom: 14px;
 }
 
 .station-stage-title {
@@ -152,20 +141,60 @@ html, body, [data-testid="stAppViewContainer"] {
 st.markdown(home_css.replace("__BG_IMAGE__", bg_image_b64), unsafe_allow_html=True)
 
 render_top_nav("home")
-st.markdown("<br>", unsafe_allow_html=True)
 
 # --- HERO BÖLÜMÜ ---
 st.markdown('<div class="hero-title">TAM OTONOM UZAY İSTASYONU</div>', unsafe_allow_html=True)
 st.markdown('<div class="hero-sub">TUA HACKATHON // NODE BASE LEO MİMARİSİ</div>', unsafe_allow_html=True)
-st.markdown("""
-<div class="station-stage">
-    <div class="station-stage-title">İstasyon Model Alanı</div>
-    <div class="station-stage-sub">CAD / Solid model görselini bu alanın içine ekleyebilirsiniz.</div>
-</div>
-""", unsafe_allow_html=True)
 
-st.markdown("---")
-
+try:
+    # 3D modeli Base64 olarak okuyup web komponentine yediriyoruz (Bulutta çökmemesi için en güvenli yol)
+    with open("assets/istasyon.glb", "rb") as f:
+        model_data = f.read()
+    b64_model = base64.b64encode(model_data).decode("utf-8")
+    
+    # Google Model Viewer Web Komponenti
+    html_code = f"""
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+    <model-viewer id="station-model"
+                  src="data:model/gltf-binary;base64,{b64_model}" 
+                  auto-rotate 
+                  rotation-per-second="12deg"
+                  orientation="-85deg 0deg 0deg"
+                  camera-controls 
+                  camera-orbit="42deg 78deg 145%"
+                  min-camera-orbit="auto 40deg auto"
+                  max-camera-orbit="auto 115deg auto"
+                  field-of-view="28deg"
+                  shadow-intensity="1"
+                  shadow-softness="0.8"
+                  tone-mapping="aces"
+                  exposure="0.9"
+                  environment-image="neutral"
+                  interaction-prompt="none"
+                  style="width: 100%; height: 380px; background: transparent; outline: none;">
+    </model-viewer>
+    <script>
+      const viewer = document.querySelector('#station-model');
+      viewer.addEventListener('load', () => {{
+        const palette = [
+          [0.38, 0.38, 0.38, 1.00],
+          [0.30, 0.30, 0.30, 1.00],
+          [0.22, 0.22, 0.22, 1.00]
+        ];
+        viewer.model?.materials?.forEach((material, idx) => {{
+          const pbr = material.pbrMetallicRoughness;
+          if (!pbr) return;
+          const tone = palette[idx % palette.length];
+          pbr.setBaseColorFactor(tone);
+          pbr.setMetallicFactor(0.36);
+          pbr.setRoughnessFactor(0.44);
+        }});
+      }});
+    </script>
+    """
+    components.html(html_code, height=390)
+except FileNotFoundError:
+    st.warning("⚠️ 3D Model (istasyon.glb) assets klasöründe bulunamadı.")
 # --- İSTASYON MODÜLLERİ (HOVER EFEKTLİ KARTLAR - BLUEPRINT'E GÖRE GÜNCELLENDİ) ---
 st.markdown("<h3 style='text-align: center; color: #4a7a96; font-family: \"Share Tech Mono\";'>İSTASYON MODÜL YAPISI VE İŞLEVSEL KESİTLER</h3><br>", unsafe_allow_html=True)
 
