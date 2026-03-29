@@ -4,11 +4,9 @@ import streamlit.components.v1 as components
 
 from pathlib import Path
 
-# Eğer kendi yazdığın nav.py dosyan varsa hata vermemesi için
 try:
     from nav import render_top_nav
 except ImportError:
-    # Eğer nav.py yoksa geçici boş bir fonksiyon
     def render_top_nav(page):
         pass
 
@@ -25,7 +23,6 @@ if bg_image_path.exists():
 else:
     bg_image_b64 = ""
 
-# --- FÜTÜRİSTİK CSS ---
 home_css = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
@@ -90,7 +87,7 @@ html, body, [data-testid="stAppViewContainer"] {
     border-left: 4px solid var(--cyan);
     border-radius: 8px;
     padding: 25px;
-    height: 240px; /* Açıklamalar sığsın diye biraz uzatıldı */
+    height: 240px;
     transition: all 0.3s ease-in-out;
     cursor: pointer;
 }
@@ -144,7 +141,7 @@ render_top_nav("home")
 
 # --- HERO BÖLÜMÜ ---
 st.markdown('<div class="hero-title">TAM OTONOM UZAY İSTASYONU</div>', unsafe_allow_html=True)
-st.markdown('<div class="hero-sub">TUA HACKATHON // NODE BASE LEO MİMARİSİ</div>', unsafe_allow_html=True)
+st.markdown('<div class="hero-sub">TUA HACKATHON</div>', unsafe_allow_html=True)
 
 try:
     # 3D modeli Base64 olarak okuyup web komponentine yediriyoruz (Bulutta çökmemesi için en güvenli yol)
@@ -195,7 +192,7 @@ try:
     components.html(html_code, height=390)
 except FileNotFoundError:
     st.warning("⚠️ 3D Model (istasyon.glb) assets klasöründe bulunamadı.")
-# --- İSTASYON MODÜLLERİ (HOVER EFEKTLİ KARTLAR - BLUEPRINT'E GÖRE GÜNCELLENDİ) ---
+#İSTASYON MODÜLLERİ
 st.markdown("<h3 style='text-align: center; color: #4a7a96; font-family: \"Share Tech Mono\";'>İSTASYON MODÜL YAPISI VE İŞLEVSEL KESİTLER</h3><br>", unsafe_allow_html=True)
 
 col1, col2, col3, col4 = st.columns(4)
@@ -240,6 +237,5 @@ with col4:
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.info("**Test Ortamı Hazır:** Sistemin otonom çalışma ve karar verme süreçlerini canlı görmek için sol menüden **Simülasyon** sayfasına geçiş yapabilirsiniz.")
 
-# Sayfanın alt kısımlarına ekip veya vizyon yazısı eklenebilir
 st.markdown("---")
 st.markdown("<p style='text-align:center; font-family: \"Share Tech Mono\"; color: #4a7a96;'>GALLIPOLI</p>", unsafe_allow_html=True)

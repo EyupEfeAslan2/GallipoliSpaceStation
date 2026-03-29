@@ -418,22 +418,70 @@ def get_scenario_scan_image(has_fod: bool):
 
 
 def detect_and_annotate(image: np.ndarray):
-    """Parlak yabancı nesneleri tespit eder ve görüntüyü anotasyonlar."""
+    """Referans goruntu farki + ROI + sekil filtreleri ile FOD tespiti yapar."""
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    _, thresh = cv2.threshold(gray, 190, 255, cv2.THRESH_BINARY)
+    h, w = gray.shape
 
-    # Morfolojik açma: gürültü azalt
-    kernel = np.ones((3, 3), np.uint8)
-    thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
+    ref_img = load_asset_image(NON_FOD_IMAGE)
+    if ref_img is not None:
+        ref_img = cv2.resize(ref_img, (w, h), interpolation=cv2.INTER_AREA)
+        ref_gray = cv2.cvtColor(ref_img, cv2.COLOR_BGR2GRAY)
+        diff = cv2.absdiff(gray, ref_gray)
+        diff = cv2.GaussianBlur(diff, (5, 5), 0)
+        _, motion_mask = cv2.threshold(diff, 20, 255, cv2.THRESH_BINARY)
+    else:
+        # Referans yoksa parlaklik tabanli fallback
+        _, motion_mask = cv2.threshold(gray, 185, 255, cv2.THRESH_BINARY)
 
-    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # Sadece fark maskesi kullan: koyu renkli FOD (ornegin canta) de yakalansin
+    candidate_mask = motion_mask
 
-    fod_list = []
+    # Yalniz docking cevresinde arama yap (dis kenarlar false-positive uretmesin)
+    roi_mask = np.zeros_like(candidate_mask)
+    cx, cy = w // 2, h // 2
+    outer_r = int(min(h, w) * 0.42)
+    inner_r = int(min(h, w) * 0.00)
+    cv2.circle(roi_mask, (cx, cy), outer_r, 255, -1)
+    cv2.circle(roi_mask, (cx, cy), inner_r, 0, -1)
+    candidate_mask = cv2.bitwise_and(candidate_mask, roi_mask)
+
+    # Morfoloji ile gurultu temizleme ve tek hedefi birlestirme
+    candidate_mask = cv2.morphologyEx(candidate_mask, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8), iterations=1)
+    candidate_mask = cv2.morphologyEx(candidate_mask, cv2.MORPH_CLOSE, np.ones((5, 5), np.uint8), iterations=2)
+    candidate_mask = cv2.dilate(candidate_mask, np.ones((7, 7), np.uint8), iterations=1)
+
+    contours, _ = cv2.findContours(candidate_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    fod_candidates = []
     for cnt in contours:
         area = cv2.contourArea(cnt)
-        if area > 60:
-            x, y, w, h = cv2.boundingRect(cnt)
-            fod_list.append((x, y, w, h, area))
+        if area < 350 or area > 4500:
+            continue
+
+        x, y, bw, bh = cv2.boundingRect(cnt)
+        if x <= 2 or y <= 2 or x + bw >= w - 2 or y + bh >= h - 2:
+            continue
+        if bw > int(w * 0.35) or bh > int(h * 0.35):
+            continue
+
+        aspect = bw / max(bh, 1)
+        if aspect < 0.2 or aspect > 2.6:
+            continue
+
+        # Kenetlenme merkezine yakin anomalileri onceliklendir
+        center_x = x + (bw / 2.0)
+        center_y = y + (bh / 2.0)
+        center_dist = math.hypot(center_x - cx, center_y - cy)
+        if center_dist > 85:
+            continue
+
+        # Buyuk ve merkeze yakin anomalileri one cikar
+        score = area - (center_dist * 4.0)
+        fod_candidates.append((score, x, y, bw, bh, area))
+
+    # En olasi hedefi sec (false-positive FOD-2 olusmasin)
+    fod_candidates.sort(key=lambda item: item[0], reverse=True)
+    fod_list = fod_candidates[:1]
 
     annotated = image.copy()
 
@@ -443,13 +491,13 @@ def detect_and_annotate(image: np.ndarray):
         cv2.rectangle(overlay, (0, 0), (639, 479), (0, 0, 180), -1)
         annotated = cv2.addWeighted(annotated, 0.85, overlay, 0.15, 0)
 
-        for idx, (x, y, w, h, area) in enumerate(fod_list):
+        for idx, (_, x, y, bw, bh, area) in enumerate(fod_list):
             # Yabanci cismi kirmizi kutu ile cembere al
-            pad = 6
+            pad = 10
             x1 = max(x - pad, 0)
             y1 = max(y - pad, 0)
-            x2 = min(x + w + pad, 639)
-            y2 = min(y + h + pad, 479)
+            x2 = min(x + bw + pad, w - 1)
+            y2 = min(y + bh + pad, h - 1)
             cv2.rectangle(annotated, (x1, y1), (x2, y2), (0, 0, 255), 2)
 
             label = f"FOD-{idx+1:02d}  ALAN:{int(area)}px2"
