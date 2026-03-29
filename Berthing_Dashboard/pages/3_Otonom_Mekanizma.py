@@ -1,6 +1,7 @@
 import streamlit as st
 from pathlib import Path
-from nav import render_top_nav
+from PIL import Image, ImageOps
+from nav import render_top_nav, render_simulation_subnav
 
 st.set_page_config(
     page_title="GALLIPOLI TUA HACKATHON | Otonom Mekanizma",
@@ -12,9 +13,8 @@ ASSETS_DIR = Path(__file__).resolve().parents[1] / "assets"
 GENEL_KAMERA_VIDEO = ASSETS_DIR / "genel_kamera.mp4"
 KILIT_ANIM_VIDEO = ASSETS_DIR / "KilitMekanizmasıAnimasyonu.mp4"
 ROBOT_ARM_IMAGES = [
-    ("ROBOT KOL / GENEL GORUNUM", ASSETS_DIR / "orjinalrobotarm.jpeg"),
-    ("KENETLENME MEKANIZMASI SIRASINDA CORE MODULU", ASSETS_DIR / "foto2.jpeg"),
-    ("ROBOT KOL / KILIT NOKTASI", ASSETS_DIR / "robot_kol_kilit.png"),
+    ("ROBOT KOL / GENEL GÖRÜNÜM", ASSETS_DIR / "orjinalrobotarm.jpeg"),
+    ("KENETLENME SIRASINDA CORE MODÜLÜ", ASSETS_DIR / "foto2.jpeg"),
 ]
 
 st.markdown(
@@ -40,6 +40,7 @@ h1, h2, h3 {
     color: var(--cyan) !important;
     letter-spacing: 2px;
     text-transform: uppercase;
+    line-height: 1.2;
 }
 
 .info-card {
@@ -51,18 +52,36 @@ h1, h2, h3 {
     margin-bottom: 14px;
 }
 
+.info-card h3 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    font-size: 1.05rem;
+}
+
+.info-card p {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.55;
+}
+
 .mono {
     font-family: 'Share Tech Mono', monospace;
     color: var(--text-soft);
+    line-height: 1.45;
+    margin-bottom: 0.55rem;
 }
 
 .video-title {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 0.76rem;
-    letter-spacing: 1.8px;
+    font-size: 0.78rem;
+    letter-spacing: 1.2px;
     color: var(--cyan);
     text-transform: uppercase;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
+    min-height: 2.25rem;
+    display: flex;
+    align-items: flex-end;
+    line-height: 1.25;
 }
 
 [data-testid="stVideo"] {
@@ -102,6 +121,17 @@ h1, h2, h3 {
     letter-spacing: 1.2px;
     line-height: 1.5;
 }
+
+@media (max-width: 900px) {
+    .video-title {
+        min-height: 0;
+        font-size: 0.74rem;
+        letter-spacing: 0.9px;
+    }
+    .info-card p {
+        font-size: 0.95rem;
+    }
+}
 </style>
 """,
     unsafe_allow_html=True,
@@ -116,12 +146,27 @@ def load_video_bytes(video_path: str):
     return p.read_bytes()
 
 
-render_top_nav("theory")
+def load_uniform_image(image_path: Path):
+    if not image_path.exists():
+        return False
+    with Image.open(image_path) as raw:
+        rgb = raw.convert("RGB")
+        # İki görseli de kırpmadan aynı sunum oranına oturt.
+        fitted = ImageOps.contain(rgb, (1600, 900), method=Image.Resampling.LANCZOS)
+        canvas = Image.new("RGB", (1600, 900), (6, 15, 25))
+        px = (canvas.width - fitted.width) // 2
+        py = (canvas.height - fitted.height) // 2
+        canvas.paste(fitted, (px, py))
+        return canvas
+
+
+render_top_nav("simulation")
+render_simulation_subnav("otonom")
 st.markdown("<br>", unsafe_allow_html=True)
 
 st.title("Otonom Mekanizma")
 st.markdown(
-    '<p class="mono">Otonom berthing mekanizmasının fazlarını, kilitlenme mantığını ve operasyon akışını açıklayan içerikler</p>',
+    '<p class="mono">Otonom berthing mekanizmasının fazlarını, kilitlenme mantığını ve operasyon akışını açıklayan içerikler.</p>',
     unsafe_allow_html=True,
 )
 
@@ -145,7 +190,7 @@ st.markdown(
   <h3>Operasyon Rehberi</h3>
   <p>
     1) <b>Simülasyon</b> sekmesine geçin.<br>
-    2) Senaryoyu seçin (Temiz Yüzey / FOD).<br>
+    2) Senaryoyu seçin.<br>
     3) <b>Otonom Sekansı Başlat</b> ile mekanizma döngüsünü çalıştırın.<br>
     4) Faz geçişleri, interlock kontrolleri ve kilitlenme durumlarını takip edin.
   </p>
@@ -174,31 +219,26 @@ with col2:
         st.warning("`assets/KilitMekanizmasıAnimasyonu.mp4` bulunamadı.")
 
 st.markdown("---")
-st.markdown('<div class="video-title">ROBOT KOL GORSEL ALANI / HAZIR SLOTLAR</div>', unsafe_allow_html=True)
-slot_cols = st.columns(3, gap="large")
+st.markdown('<div class="video-title">ROBOT KOL GÖRSEL ALANI / HAZIR SLOTLAR</div>', unsafe_allow_html=True)
+slot_cols = st.columns(len(ROBOT_ARM_IMAGES), gap="large")
 
 for col, (label, image_path) in zip(slot_cols, ROBOT_ARM_IMAGES):
     with col:
         st.markdown(f'<div class="video-title">{label}</div>', unsafe_allow_html=True)
-        if image_path.exists():
-            st.image(str(image_path), use_container_width=True)
+        img = load_uniform_image(image_path)
+        if img:
+            st.image(img, use_container_width=True)
         else:
             st.markdown(
                 f"""
                 <div class="image-slot">
                     <div class="image-slot-label">
-                        {image_path.name} dosyasi bekleniyor.<br>
-                        Dosyayi <b>assets/</b> klasorune eklediginizde otomatik goruntulenecek.
+                        {image_path.name} dosyası bekleniyor.<br>
+                        Dosyayı <b>assets/</b> klasörüne eklediğinizde otomatik görüntülenecek.
                     </div>
                 </div>
                 """,
                 unsafe_allow_html=True,
             )
-
-st.markdown(
-    '<p class="mono">Desteklenen ornek dosya adlari: `orjinalrobotarm.jpeg`, `foto2.jpeg`, `robot_kol_kilit.png`</p>',
-    unsafe_allow_html=True,
-)
-
 st.markdown("---")
 st.markdown("<p style='text-align:center;' class='mono'>GALLIPOLI</p>", unsafe_allow_html=True)

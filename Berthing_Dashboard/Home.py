@@ -144,8 +144,9 @@ st.markdown('<div class="hero-title">TAM OTONOM UZAY İSTASYONU</div>', unsafe_a
 st.markdown('<div class="hero-sub">TUA HACKATHON</div>', unsafe_allow_html=True)
 
 try:
-    # 3D modeli Base64 olarak okuyup web komponentine yediriyoruz (Bulutta çökmemesi için en güvenli yol)
-    with open("assets/istasyon.glb", "rb") as f:
+    # 3D modeli ortama bagimli olmayan goreli yoldan oku
+    model_path = Path(__file__).parent / "assets" / "istasyon.glb"
+    with open(model_path, "rb") as f:
         model_data = f.read()
     b64_model = base64.b64encode(model_data).decode("utf-8")
     

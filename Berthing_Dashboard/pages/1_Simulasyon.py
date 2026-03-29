@@ -8,7 +8,7 @@ import io
 import csv
 import json
 from pathlib import Path
-from nav import render_top_nav
+from nav import render_top_nav, render_simulation_subnav
 
 # ═══════════════════════════════════════════════════════════
 #  SAYFA AYARLARI
@@ -339,6 +339,7 @@ hr { border-color: var(--border) !important; }
 """, unsafe_allow_html=True)
 
 render_top_nav("simulation")
+render_simulation_subnav("berthing")
 st.markdown("<br>", unsafe_allow_html=True)
 
 
@@ -493,7 +494,7 @@ def detect_and_annotate(image: np.ndarray):
 
         for idx, (_, x, y, bw, bh, area) in enumerate(fod_list):
             # Yabanci cismi kirmizi kutu ile cembere al
-            pad = 10
+            pad = 2
             x1 = max(x - pad, 0)
             y1 = max(y - pad, 0)
             x2 = min(x + bw + pad, w - 1)
@@ -901,7 +902,7 @@ if start:
         st.success("GO: Berthing sekansı başlatıldı.")
     else:
         st.error("NO-GO: FOD senaryosu aktif. Güvenlik protokolü devrede.")
-    st.info("Görev anlatımı ve mekanizma detayları için `Otonom Mekanizma` sekmesini açabilirsiniz.")
+    st.info("Görev anlatımı ve mekanizma detayları için Simülasyon alt menüsünden `Otonom Mekanizma` sayfasına geçebilirsiniz.")
     st.markdown("---")
 
     # ── UDP Komutu Gönder ──────────────────────────────────

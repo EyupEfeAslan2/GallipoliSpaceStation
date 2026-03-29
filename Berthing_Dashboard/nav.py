@@ -63,7 +63,7 @@ def render_top_nav(active_page: str):
         unsafe_allow_html=True,
     )
 
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3 = st.columns(3)
 
     with col1:
         if st.button("Hakkımızda", use_container_width=True, disabled=(active_page == "about")):
@@ -77,10 +77,6 @@ def render_top_nav(active_page: str):
         if st.button("Simülasyon", use_container_width=True, disabled=(active_page == "simulation")):
             _safe_switch("pages/1_Simulasyon.py")
 
-    with col4:
-        if st.button("Otonom Mekanizma", use_container_width=True, disabled=(active_page == "theory")):
-            _safe_switch("pages/3_Otonom_Mekanizma.py")
-
     st.markdown(
         """
         <div class="github-cta-wrap">
@@ -90,5 +86,42 @@ def render_top_nav(active_page: str):
           </a>
         </div>
         """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_simulation_subnav(active_sim_page: str):
+    st.markdown(
+        """
+        <style>
+        .sim-subnav-note {
+            font-family: 'Share Tech Mono', monospace;
+            color: #8daabf;
+            font-size: 0.74rem;
+            letter-spacing: 1px;
+            margin-top: 2px;
+            margin-bottom: 8px;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    s1, s2, s3 = st.columns(3)
+
+    with s1:
+        if st.button("Berthing Simülasyonu", use_container_width=True, disabled=(active_sim_page == "berthing")):
+            _safe_switch("pages/1_Simulasyon.py")
+
+    with s2:
+        if st.button("Otonom Mekanizma", use_container_width=True, disabled=(active_sim_page == "otonom")):
+            _safe_switch("pages/3_Otonom_Mekanizma.py")
+
+    with s3:
+        if st.button("Savunma Mekanizması", use_container_width=True, disabled=(active_sim_page == "savunma")):
+            _safe_switch("pages/4_Savunma_Mekanizmasi.py")
+
+    st.markdown(
+        '<div class="sim-subnav-note">Simülasyon Alt Sayfaları: Berthing, Otonom Mekanizma, Savunma Mekanizması</div>',
         unsafe_allow_html=True,
     )
