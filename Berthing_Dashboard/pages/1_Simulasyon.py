@@ -7,7 +7,6 @@ import math
 import io
 import csv
 import json
-from pathlib import Path
 from nav import render_top_nav
 
 # ═══════════════════════════════════════════════════════════
@@ -18,10 +17,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
-
-ASSETS_DIR = Path(__file__).resolve().parents[1] / "assets"
-GENEL_KAMERA_VIDEO = ASSETS_DIR / "genel_kamera.mp4"
-KILIT_ANIM_VIDEO = ASSETS_DIR / "KilitMekanizmasıAnimasyonu.mp4"
 
 # ═══════════════════════════════════════════════════════════
 #  GLOBAL CSS - Futuristik / Karanlik Tema
@@ -332,42 +327,6 @@ hr { border-color: var(--border) !important; }
     color: var(--text-dim);
 }
 
-.video-brief {
-    background: linear-gradient(90deg, #06121f, #082034, #06121f);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--accent-cyan);
-    border-radius: 6px;
-    padding: 12px 14px;
-    margin-bottom: 10px;
-}
-.video-brief-title {
-    font-family: 'Share Tech Mono', monospace;
-    color: var(--accent-cyan);
-    letter-spacing: 2px;
-    font-size: 0.76rem;
-    text-transform: uppercase;
-}
-.video-brief-sub {
-    margin-top: 4px;
-    color: var(--text-dim);
-    font-size: 0.9rem;
-}
-.video-label {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.72rem;
-    letter-spacing: 1.6px;
-    text-transform: uppercase;
-    color: var(--accent-cyan);
-    margin-bottom: 6px;
-}
-[data-testid="stVideo"] {
-    border: 1px solid var(--border) !important;
-    border-top: 2px solid var(--accent-cyan) !important;
-    border-radius: 8px !important;
-    overflow: hidden !important;
-    box-shadow: var(--glow-cyan) !important;
-}
-
 /* scrollbar */
 ::-webkit-scrollbar { width:4px; background:var(--bg-primary); }
 ::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
@@ -632,13 +591,6 @@ def render_milestones(ph, milestones):
     ph.markdown(f"<div class='milestone-grid'>{''.join(cards)}</div>", unsafe_allow_html=True)
 
 
-@st.cache_data(show_spinner=False)
-def load_video_bytes(video_path: str):
-    path = Path(video_path)
-    if not path.exists():
-        return None
-    return path.read_bytes()
-
 # ═══════════════════════════════════════════════════════════
 #  HEADER BANNER
 # ═══════════════════════════════════════════════════════════
@@ -661,40 +613,6 @@ m_col2.metric("UDP Bağlantısı",  "127.0.0.1:5005", "Unity Simülatörü")
 m_col3.metric("Kol Konumu (m)",  "10.00",     "+/-0.002")
 m_col4.metric("Yonelim (deg)",   "0.00",      "Roll/Pitch/Yaw")
 m_col5.metric("Batarya",         "%94",       "Nominal")
-
-st.markdown("---")
-
-# ═══════════════════════════════════════════════════════════
-#  GÖREV İŞLEYİŞ ÖNİZLEME VİDEOLARI
-# ═══════════════════════════════════════════════════════════
-st.markdown('<div class="panel-title">GÖREV İŞLEYİŞ ÖNİZLEME</div>', unsafe_allow_html=True)
-st.markdown(
-    """
-    <div class="video-brief">
-      <div class="video-brief-title">Görev Akış Özeti</div>
-      <div class="video-brief-sub">
-        Sol video istasyonla hizalama ve yaklaşma akışını, sağ video ise kenetlenme/kilit mekanizmasının
-        çalışma adımlarını gösterir. İkisi birlikte berthing sürecinin genel mantığını anlatır.
-      </div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
-vcol1, vcol2 = st.columns(2, gap="large")
-with vcol1:
-    st.markdown('<div class="video-label">GENEL KAMERA / YAKLAŞMA AKIŞI</div>', unsafe_allow_html=True)
-    genel_kamera_data = load_video_bytes(str(GENEL_KAMERA_VIDEO))
-    if genel_kamera_data:
-        st.video(genel_kamera_data, autoplay=True, muted=True, loop=True)
-    else:
-        st.warning("`assets/genel_kamera.mp4` bulunamadı.")
-with vcol2:
-    st.markdown('<div class="video-label">KİLİT MEKANİZMASI / HARD LOCK ANİMASYONU</div>', unsafe_allow_html=True)
-    kilit_anim_data = load_video_bytes(str(KILIT_ANIM_VIDEO))
-    if kilit_anim_data:
-        st.video(kilit_anim_data, autoplay=True, muted=True, loop=True)
-    else:
-        st.warning("`assets/KilitMekanizmasıAnimasyonu.mp4` bulunamadı.")
 
 st.markdown("---")
 
@@ -914,20 +832,11 @@ if start:
     interlocks_state["FOD Gate"] = "CHECKING"
     render_interlocks(interlock_ph, interlocks_state)
 
-    # ── Senaryoya göre video seç ───────────────────────────
-    st.markdown("### Canlı Görev Beslemesi (Simülasyon)")
-    video_data = None
     if test_scenario == "Temiz Yüzey (Başarılı Kenetlenme)":
-        video_data = load_video_bytes(str(GENEL_KAMERA_VIDEO))
         st.success("GO: Berthing sekansı başlatıldı.")
     else:
-        video_data = load_video_bytes(str(KILIT_ANIM_VIDEO))
         st.error("NO-GO: FOD senaryosu aktif. Güvenlik protokolü devrede.")
-
-    if video_data:
-        st.video(video_data)
-    else:
-        st.warning("Simülasyon videosu bulunamadı. `assets` klasörünü kontrol edin.")
+    st.info("Görev anlatım videoları ve teorik kullanım özeti için `Teori & Medya` sekmesini açabilirsiniz.")
     st.markdown("---")
 
     # ── UDP Komutu Gönder ──────────────────────────────────

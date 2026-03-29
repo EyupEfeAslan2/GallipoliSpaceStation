@@ -63,7 +63,7 @@ def render_top_nav(active_page: str):
         unsafe_allow_html=True,
     )
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
 
     with col1:
         if st.button("Hakkımızda", use_container_width=True, disabled=(active_page == "about")):
@@ -76,6 +76,10 @@ def render_top_nav(active_page: str):
     with col3:
         if st.button("Simülasyon", use_container_width=True, disabled=(active_page == "simulation")):
             _safe_switch("pages/1_Simulasyon.py")
+
+    with col4:
+        if st.button("Teori & Medya", use_container_width=True, disabled=(active_page == "theory")):
+            _safe_switch("pages/3_Teori_ve_Medya.py")
 
     st.markdown(
         """
